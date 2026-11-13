@@ -1,0 +1,158 @@
+{
+  "name": "LeetMetric daily digest",
+  "nodes": [
+    {
+      "id": "n1",
+      "name": "Every morning",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "n2",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "baseUrl",
+              "type": "string",
+              "value": "https://leet-metric-seven.vercel.app"
+            },
+            {
+              "id": "a2",
+              "name": "username",
+              "type": "string",
+              "value": "YOUR_LEETCODE_USERNAME"
+            },
+            {
+              "id": "a3",
+              "name": "toEmail",
+              "type": "string",
+              "value": "you@example.com"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "n3",
+      "name": "Fetch stats",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.baseUrl }}/api/leetcode",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ username: $json.username }) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "n4",
+      "name": "Build message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const s = $json.stats;\nconst cfg = $('Config').first().json;\nconst line = (d) => `${d}: ${s[d].solved} / ${s[d].total}`;\nreturn [{ json: {\n  toEmail: cfg.toEmail,\n  subject: `LeetCode: ${s.All.solved} solved (rank ${$json.ranking ?? 'n/a'})`,\n  text: [`LeetCode summary for ${$json.username}`, line('Easy'), line('Medium'), line('Hard'), line('All')].join('\n'),\n}}];"
+      }
+    },
+    {
+      "id": "n5",
+      "name": "Send email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        880,
+        0
+      ],
+      "parameters": {
+        "fromEmail": "={{ $json.toEmail }}",
+        "toEmail": "={{ $json.toEmail }}",
+        "subject": "={{ $json.subject }}",
+        "emailFormat": "text",
+        "text": "={{ $json.text }}",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Every morning": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Fetch stats",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch stats": {
+      "main": [
+        [
+          {
+            "node": "Build message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build message": {
+      "main": [
+        [
+          {
+            "node": "Send email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

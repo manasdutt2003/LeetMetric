@@ -79,3 +79,7 @@ The numbers above are illustrative.
 
 This project is not affiliated with LeetCode. It reads public profile data
 through an unofficial endpoint that may change without notice.
+
+## Automation
+
+An importable [n8n](https://n8n.io) workflow in `n8n/` emails a daily LeetCode summary using the API above.
