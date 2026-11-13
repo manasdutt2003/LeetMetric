@@ -2,23 +2,21 @@
 import { motion } from "framer-motion";
 import ProgressRing from "./ProgressRing";
 import { User, Trophy } from "lucide-react";
+import type { Difficulty, LeetCodeStats } from "@/lib/leetcode";
 
-export default function StatsCard({ data }: { data: any }) {
-    if (!data?.matchedUser) return null;
+const RINGS: { difficulty: Difficulty; color: string; text: string }[] = [
+    { difficulty: "Easy", color: "#10b981", text: "text-emerald-500/80" },
+    { difficulty: "Medium", color: "#f59e0b", text: "text-yellow-500/80" },
+    { difficulty: "Hard", color: "#ef4444", text: "text-red-500/80" },
+];
 
-    const { matchedUser } = data;
-    const { username, submitStats, profile } = matchedUser;
-    const acSubmissionNum = submitStats.acSubmissionNum;
+function percent(solved: number, total: number) {
+    return total > 0 ? Math.min((solved / total) * 100, 100) : 0;
+}
 
-    const easy = acSubmissionNum.find((s: any) => s.difficulty === "Easy")?.count || 0;
-    const medium = acSubmissionNum.find((s: any) => s.difficulty === "Medium")?.count || 0;
-    const hard = acSubmissionNum.find((s: any) => s.difficulty === "Hard")?.count || 0;
-    const totalSolved = acSubmissionNum.find((s: any) => s.difficulty === "All")?.count || 0;
-
-    // Approximate total problem counts on LeetCode for progress visualization
-    const E_TOTAL = 850;
-    const M_TOTAL = 1750;
-    const H_TOTAL = 750;
+export default function StatsCard({ data }: { data: LeetCodeStats }) {
+    const { username, ranking, stats } = data;
+    const all = stats.All;
 
     return (
         <motion.div
@@ -29,38 +27,54 @@ export default function StatsCard({ data }: { data: any }) {
             <div className="flex flex-col md:flex-row items-center justify-between mb-8 border-b border-zinc-800 pb-6 gap-4">
                 <div className="flex items-center gap-4">
                     <div className="p-3 bg-emerald-500/10 rounded-full text-emerald-500 border border-emerald-500/20">
-                        <User size={32} />
+                        <User size={32} aria-hidden="true" />
                     </div>
                     <div>
-                        <h2 className="text-3xl font-bold tracking-tight">{username}</h2>
+                        <h2 className="text-3xl font-bold tracking-tight break-all">
+                            <a
+                                href={`https://leetcode.com/u/${encodeURIComponent(username)}/`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="hover:text-emerald-400 transition-colors"
+                            >
+                                {username}
+                            </a>
+                        </h2>
                         <div className="flex items-center gap-2 text-zinc-400 mt-1">
-                            <Trophy size={16} className="text-yellow-500" />
-                            <span className="font-mono text-sm">Rank: {profile?.ranking?.toLocaleString() ?? "N/A"}</span>
+                            <Trophy size={16} className="text-yellow-500" aria-hidden="true" />
+                            <span className="font-mono text-sm">
+                                Rank: {ranking ? ranking.toLocaleString() : "N/A"}
+                            </span>
                         </div>
                     </div>
                 </div>
 
                 <div className="text-center md:text-right bg-zinc-950/50 p-3 rounded-lg border border-zinc-800">
                     <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">Total Solved</p>
-                    <p className="text-4xl font-black text-white">{totalSolved}</p>
+                    <p className="text-4xl font-black text-white">
+                        {all.solved.toLocaleString()}
+                        {all.total > 0 && (
+                            <span className="text-base font-medium text-zinc-500"> / {all.total.toLocaleString()}</span>
+                        )}
+                    </p>
                 </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 justify-items-center">
-                <div className="flex flex-col items-center gap-2">
-                    <ProgressRing count={easy} label="Easy" color="#10b981" progress={Math.min((easy / E_TOTAL) * 100, 100)} />
-                    <span className="text-xs text-emerald-500/80">Beats {((easy / E_TOTAL) * 100).toFixed(1)}%</span>
-                </div>
-
-                <div className="flex flex-col items-center gap-2">
-                    <ProgressRing count={medium} label="Medium" color="#f59e0b" progress={Math.min((medium / M_TOTAL) * 100, 100)} />
-                    <span className="text-xs text-yellow-500/80">Beats {((medium / M_TOTAL) * 100).toFixed(1)}%</span>
-                </div>
-
-                <div className="flex flex-col items-center gap-2">
-                    <ProgressRing count={hard} label="Hard" color="#ef4444" progress={Math.min((hard / H_TOTAL) * 100, 100)} />
-                    <span className="text-xs text-red-500/80">Beats {((hard / H_TOTAL) * 100).toFixed(1)}%</span>
-                </div>
+                {RINGS.map(({ difficulty, color, text }) => {
+                    const { solved, total } = stats[difficulty];
+                    const share = percent(solved, total);
+                    return (
+                        <div key={difficulty} className="flex flex-col items-center gap-2">
+                            <ProgressRing count={solved} label={difficulty} color={color} progress={share} />
+                            <span className={`text-xs ${text}`}>
+                                {total > 0
+                                    ? `${share.toFixed(1)}% of ${total.toLocaleString()} solved`
+                                    : "Total unavailable"}
+                            </span>
+                        </div>
+                    );
+                })}
             </div>
         </motion.div>
     );

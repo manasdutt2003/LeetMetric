@@ -1,40 +1,81 @@
 # LeetMetric
 
-A premium LeetCode stats visualizer built with **Next.js 14**, **Tailwind CSS**, and **Framer Motion**.
+A LeetCode stats visualizer built with Next.js, Tailwind CSS and Framer Motion.
+Enter a username to see problems solved by difficulty, measured against the
+live number of problems on LeetCode, plus global ranking.
 
-![LeetMetric Preview](https://github.com/manasdutt2003/LeetMetric/raw/main/preview.png)
+**Live:** https://leet-metric-seven.vercel.app
 
 ## Features
 
-- 🔍 **Real-time Search**: Fetch user stats directly from LeetCode's GraphQL API.
-- 🎨 **Premium UI**: Modern dark mode aesthetic, glassmorphism cards, and fluid animations.
-- 📊 **Visual Stats**: Interactive circular progress rings for Easy, Medium, and Hard difficulty breakdown.
-- ⚡ **Fast & Responsive**: Built on Next.js App Router with server-side API proxying.
+- Looks up any public LeetCode profile through a server-side proxy to
+  LeetCode's GraphQL API (the browser cannot call it directly because of CORS)
+- Animated progress rings for Easy, Medium and Hard
+- Problem totals come from LeetCode at request time, so the percentages stay
+  correct as new problems are added
+- Clear messages for unknown users, invalid usernames and upstream outages
 
-## Getting Started
-
-First, install the dependencies:
+## Getting started
 
 ```bash
 npm install
-```
-
-Then, run the development server:
-
-```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000.
 
-## Tech Stack
+```bash
+npm run lint     # ESLint
+npm run build    # production build
+```
 
-- **Framework**: [Next.js](https://nextjs.org/)
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
-- **Animations**: [Framer Motion](https://www.framer.com/motion/)
-- **Icons**: [Lucide React](https://lucide.dev/)
+## Tech stack
 
-## API Reference
+- [Next.js](https://nextjs.org/) 16 (App Router) with React 19 and TypeScript
+- [Tailwind CSS](https://tailwindcss.com/) 4
+- [Framer Motion](https://www.framer.com/motion/)
+- [Lucide](https://lucide.dev/) icons
 
-The app uses a local API route to proxy requests to LeetCode to avoid CORS issues.
-- `POST /api/leetcode`: Expects `{ username: string }`.
+## API
+
+`POST /api/leetcode`
+
+```json
+{ "username": "someuser" }
+```
+
+Response:
+
+```json
+{
+  "username": "someuser",
+  "ranking": 123456,
+  "stats": {
+    "All":    { "solved": 420, "total": 3600, "submissions": 610 },
+    "Easy":   { "solved": 180, "total": 900,  "submissions": 240 },
+    "Medium": { "solved": 200, "total": 1880, "submissions": 310 },
+    "Hard":   { "solved": 40,  "total": 820,  "submissions": 60 }
+  }
+}
+```
+
+The numbers above are illustrative.
+
+| Status | Meaning |
+| --- | --- |
+| 400 | Missing or malformed username |
+| 404 | No such LeetCode user |
+| 502 / 504 | LeetCode was unreachable or timed out |
+
+## Project layout
+
+| Path | Purpose |
+| --- | --- |
+| `src/app/page.tsx` | Search page |
+| `src/app/api/leetcode/route.ts` | Proxy to LeetCode's GraphQL API |
+| `src/components/` | Stats card and progress ring |
+| `src/lib/leetcode.ts` | Shared types and username validation |
+| `legacy/` | The original plain HTML/Express version, kept for reference |
+
+This project is not affiliated with LeetCode. It reads public profile data
+through an unofficial endpoint that may change without notice.
