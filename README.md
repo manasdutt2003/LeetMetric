@@ -29,6 +29,17 @@ npm run lint     # ESLint
 npm run build    # production build
 ```
 
+## Docker
+
+```bash
+docker build -t leetmetric .
+docker run --rm -p 3000:3000 leetmetric
+```
+
+The image uses Next.js standalone output and runs as a non-root user. The build
+downloads Google Fonts, so it needs network access. Set `PORT` to change the
+listening port.
+
 ## Tech stack
 
 - [Next.js](https://nextjs.org/) 16 (App Router) with React 19 and TypeScript
@@ -76,6 +87,9 @@ The numbers above are illustrative.
 | `src/components/` | Stats card and progress ring |
 | `src/lib/leetcode.ts` | Shared types and username validation |
 | `legacy/` | The original plain HTML/Express version, kept for reference |
+| `docs/ARCHITECTURE.md` | Request flow, design decisions and known limitations |
+
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for more detail.
 
 This project is not affiliated with LeetCode. It reads public profile data
 through an unofficial endpoint that may change without notice.
